@@ -1,3 +1,19 @@
+#!groovy
+
+def collections = ['paycore', 'workercore', 'skillcore', 'clientcore', 'projectcore', 'workcore', 'paycore2', 'groupcore']
+
+//Controls how many builds are kept in Jenkins. Adjust to taste.
+properties([
+		[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']],
+		parameters(
+			collections.collect({ booleanParam( name: it )}) +
+			[choice(name: 'ENV', choices: ['development', 'qa', 'production'], description: 'Enter the environment you want to deploy to')]
+			)
+])
+
+env.ENVIRONMENT = params.ENV
+env.ENVIRONMENT_TAG = ['development': 'Development', 'qa': 'QA', 'production': 'Production'][env.ENVIRONMENT]
+
 pipeline {
 	agent { docker { image 'maven:3.3.3' } }
 	stages {
@@ -7,10 +23,20 @@ pipeline {
 			}
 		}
 		stage('rebuild-pod'){
-			when { changeset "Charts.yaml"}
+			when {
+				anyOf {
+					changeset "values.yaml"
+						changeset "values.*.yaml"
+				}
+			}			
 			steps {
 				sh 'date'
-					sh 'cat ./Charts.yaml'
+					sh	'echo "===========>KubeDeploy"'			
+			}
+		}
+		stage('deploy-managedschema'){
+			steps {
+				sh 'echo "Deploying managed schema"'
 			}
 		}
 	}
