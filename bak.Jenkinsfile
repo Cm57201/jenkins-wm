@@ -40,7 +40,7 @@ pipeline {
     stage('check-selected-collections') {
       steps {
         script {
-        if (!params.CollectionValues?.trim()) {        
+        if (params.CollectionValues?.trim()) {        
            echo "Atleast one collection has to be selected"
           currentBuild.result = "FAIL"
           return
@@ -49,13 +49,7 @@ pipeline {
       }
     }
     stage('deploy-managedschema') {
-  agent {
-    docker {
-      image 'solr:8.8.1'
-    }
-  }    
-
-  when {
+      when {
         expression {
           params.CollectionValues.split(",").size() > 0
         }
@@ -68,10 +62,8 @@ pipeline {
         sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
         script {
           def collections_list = params.CollectionValues.split(",")
-          docker.image('solr:8.8.1').inside(){
           for (String collection: collections_list)
             echo "Got collection: " + collection
-          }
         }
       }
     }
