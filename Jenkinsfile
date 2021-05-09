@@ -6,6 +6,13 @@ pipeline {
 				sh 'mvn --version'
 			}
 		}
+		stage('rebuild-pod'){
+			when { changeset "Charts.yaml"}
+			steps {
+				sh 'date'
+					sh 'cat ./Charts.yaml'
+			}
+		}
 	}
 
 	post {
