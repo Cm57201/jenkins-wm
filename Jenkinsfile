@@ -7,7 +7,7 @@ properties([
 ])
 
 env.ENVIRONMENT = params.ENV
-env.ZK_HOST = ['Development': 'zoo1:2181,zoo2:2181,zoo3:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK'][env.ENVIRONMENT]
+env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK'][env.ENVIRONMENT]
 
 	pipeline {
 		agent any
@@ -65,6 +65,8 @@ env.ZK_HOST = ['Development': 'zoo1:2181,zoo2:2181,zoo3:2181', 'QA': 'QA_ZK', 'P
 								docker.image('solr:8.8.1').inside(){
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
+										sh "solr zk rm /configs/${collection}/managed-schema -z ${env.ZK_HOST}"
+                    sh "solr zk upconfig -n ${collection} -d configsets/${collection} -z ${env.ZK_HOST}"
 									}
 								}
 						}

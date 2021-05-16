@@ -1,0 +1,17 @@
+# Synonyms that clarify industry acronyms, abbreviations, etc..
+# or consolidate multi-term aroudn
+
+ext => extension
+dmarc, demarc => demarcation
+disp => display
+eqpt, equip => equipment
+cert => certificate, certification
+rep => representative
+ttu => turnup
+
+# multi-term acronym expansions that I'm not sure what to do with yet
+#digital cross connect, cross connect => dsx
+#high speed internet access, broadband => hsia
+#high-availability, high availability => ha
+#network video recorder => nvr
+#single system image => ssi

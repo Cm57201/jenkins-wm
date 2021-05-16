@@ -1,0 +1,42 @@
+# use in a different field (e.g. copy-to: skills_expanded or skills_hyponyms)
+#
+#      <analyzer>
+#         <tokenizer class="solr.KeywordTokenizerFactory"/>
+#         <filter class="solr.TrimFilterFactory" />
+#         <filter class="solr.StopFilterFactory" ignoreCase="true"
+#  words="stopwords.txt" enablePositionIncrements="true"/>
+#         <filter class="solr.SynonymGraphFilterFactory"
+#  tokenizerFactory="solr.KeywordTokenizerFactory"
+#  synonyms="synonyms.txt" ignoreCase="true" expand="false" />
+#         <filter class="solr.FlattenGraphFilterFactory"/>
+#         <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+#       </analyzer>
+#
+#
+# The goal is to add the specific minutia that you'd expect to find in a job order
+# like: "water heater repair", "gas line inspection" to workers skilled in the general trade(s)
+# like "plumbing"
+
+water heater, boiler, gas line => plumbing
+termination, 568b, CAT5, CAT5e, CAT 5, COAX, BNC, RJ31X, cross over cables, crossover, demarc, fiber optics, fiber optic => cabling
+site survey, demarc, dmarc, cisco, netgate, sonicwall, router, routers, hub, hubs, switch, switches, broadband, access point, access points, AP, T1, WAN, MAN, LAN, WLAN, ISDN, VOIP, topologies, WiFi, wi-fi, WiMax, wi max, DSL, 5 Gig, 802.11A, 802.11B, 802.11G, 802.11 G, 802.11N, 802.11 N => network
+=> hvac
+channel sales, business development, cold calling, consultative selling, lead generation, prospecting => sales
+literary skills, content creation, content development, online publications, proof reading, proofreading => writing
+in-store, store demonstrations, new store services, promotional activities, product launches, product demonstrations, graphic installation, spokesmodel, fixtures, racking => merchandising
+cleaning => custodial
+volt, ohm, ohms law, electrical code, voltage => electrical
+digital signage => signage
+AV, TV, VESA, ceiling mount, plasma => electronics
+workplace safety => osha
+Cisco IP Phone, Lucent, Avaya => ip phone
+barcode scanners, POP, point of purchase => POS
+cam, camera, security camera, closed circuit tv, surveillance => CCTV
+Computer, Access Control, ACL, RAID, cloud computing, Linux, Dell, network card, operating systems, PC Repair, hard drive, memory => systems
+MySQL, MongoDB, Ruby, open-source, php => software
+MS Excel, MS Word, Powerpoint, MS Access, Microsoft Office, MS Office => MS_Office
+refrigerator, dishwasher, => appliances
+greeter, concierge => guest services
+cook, cooking, chef => food services
+laser color, laser, lexmark, hp => printer
+finish carpentry, rough carpentry, fixture installation, graphic installation, roofing, carpenter, handyman => carpentry

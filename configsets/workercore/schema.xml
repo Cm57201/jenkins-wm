@@ -1,0 +1,864 @@
+<?xml version="1.0" ?>
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed
+	with this work for additional information regarding copyright ownership. The ASF licenses this file to You under the Apache License,
+	Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License
+	at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under
+	the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+	for the specific language governing permissions and limitations under the License. -->
+
+<schema name="workercore" version="1.6">
+	<!-- attribute "name" is the name of this schema and is only used for display purposes.
+		 version="x.y" is Solr's version number for the schema syntax and
+		 semantics.  It should not normally be changed by applications.
+
+		 1.0: multiValued attribute did not exist, all fields are multiValued
+			  by nature
+		 1.1: multiValued attribute introduced, false by default
+		 1.2: omitTermFreqAndPositions attribute introduced, true by default
+			  except for text fields.
+		 1.3: removed optional field compress feature
+		 1.4: autoGeneratePhraseQueries attribute introduced to drive QueryParser
+			  behavior when a single string produces multiple tokens.  Defaults
+			  to off for version >= 1.4
+		 1.5: omitNorms defaults to true for primitive field types
+			  (int, float, boolean, string...)
+		 1.6: useDocValuesAsStored defaults to true.
+   -->
+
+	<similarity class="solr.SchemaSimilarityFactory">
+		<!--
+			use search_full_name_highlight_text similarity as global default.
+			search_full_name_highlight_text similarity ignores normalization
+		-->
+		<str name="defaultSimFromFieldType">search_full_name_highlight_text</str>
+	</similarity>
+
+	<types>
+		<fieldType name="long" class="solr.LongPointField" />
+
+		<!--
+			...........................
+			Types used for explicit filtering and facet-response
+			...........................
+
+			(docValues persist values in a column-store format and serve
+			 faceting requests while lowering the memory footprint formerly required
+			 for facets with "stored" fields)
+
+			(norms not needed)
+
+			(TrieDate and TrieInt enable fast range queries)
+		-->
+		<fieldtype name="facet_filter_external_id"
+				   class="solr.StrField"
+				   multiValued="true"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="facet_filter_string"
+				   class="solr.StrField"
+				   multiValued="true"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+		<fieldtype name="facet_filter_int"
+				   class="solr.IntPointField"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+		<fieldtype name="facet_filter_long"
+				   class="solr.LongPointField"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+		/>
+		<fieldtype name="facet_filter_float"
+				   class="solr.FloatPointField"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+		/>
+		<fieldtype name="facet_filter_sort_percent_as_int"
+				   class="solr.IntPointField"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+		<!-- Note:  Representing percentages with integers (0 to 100)
+			based on display requirements (no decimials) and to dodge fp-precision bugs
+		-->
+
+		<fieldtype name="facet_filter_date"
+				   class="solr.DatePointField"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="facet_filter_boolean"
+				   class="solr.BoolField"
+				   indexed="true"
+				   docValues="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<!--
+			...........................
+			Fields used for filtering but not faceting
+			...........................
+		-->
+		<fieldtype name="filter_external_id"
+				   class="solr.StrField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="filter_int"
+				   class="solr.IntPointField"
+				   indexed="true"
+				   stored="false"
+		/>
+
+		<fieldtype name="filter_long"
+				   class="solr.LongPointField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+		/>
+
+		<fieldtype name="filter_date"
+				   class="solr.DatePointField"
+				   indexed="true"
+				   stored="false"
+		/>
+
+		<fieldtype name="filter_string"
+				   class="solr.StrField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="filter_location"
+				   class="solr.SpatialRecursivePrefixTreeFieldType"
+				   geo="true"
+				   multiValued="true"
+				   distErrPct="0.025"
+				   maxDistErr="0.000009"
+				   distanceUnits="kilometers"
+	    />
+		<!-- Note:  SpatialRPT is a newish Solr 4 type that offers faster filtering
+			performance, and the ability to store multiple location values.
+			Tuning parameters are set to example defaults.
+		-->
+
+		<!--
+			...........................
+			Fields used for sorting and boosting
+			...........................
+		-->
+		<fieldtype name="sort_boost_single_location"
+				   class="solr.LatLonPointSpatialField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+		/>
+
+		<fieldtype name="sort_boost_single_int"
+				   class="solr.IntPointField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   docValues="true"
+				   omitNorms="true"
+		/>
+
+
+		<fieldtype name="sort_boost_single_double"
+				   class="solr.DoublePointField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   docValues="true"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="sort_single_date"
+				   class="solr.DatePointField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   docValues="true"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="sort_single_string"
+				   class="solr.TextField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   sortMissingLast="true"
+				   omitNorms="true"
+				   omitTermFreqAndPositions="true">
+			<analyzer>
+				<tokenizer class="solr.KeywordTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory" />
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<!-- Multi-valued field type to index availability for a worker -->
+		<fieldtype name="sort_multi_date"
+				   class="solr.DatePointField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<!--
+			...........................
+			Field Types used for search
+			...........................
+		-->
+		<fieldtype name="search_external_id"
+				   class="solr.StrField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+		/>
+
+		<fieldtype name="search_exact"
+				   class="solr.TextField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+				   omitTermFreqAndPositions="true">
+			<analyzer>
+				<tokenizer class="solr.KeywordTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory" />
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<!-- search_email
+		     Strips address-tags in mailbox part.
+		     Allows searcher to muff the suffix (normalizes without the suffix).
+		     Allows searcher to muff residual punctuation in the address  (normalizes without the punctuation)
+			 amy123-amytr0n+spam@gmail.com => amy123amytr0n@gmail
+		-->
+		<fieldtype name="search_email"
+				   class="solr.TextField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   positionIncrementGap="1">
+			<analyzer>
+				<tokenizer class="solr.KeywordTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory" />
+				<filter class="solr.TrimFilterFactory" />
+				<filter class="solr.ASCIIFoldingFilterFactory"/>
+				<filter class="solr.PatternReplaceFilterFactory"
+						pattern="([\w\-.]+)(?:\+[\w-.]*)?@([a-z\d\-]+)(?:\.[a-z]+)?"
+						replacement="$1@$2"  />
+				<filter class="solr.PatternReplaceFilterFactory"
+						pattern="([^a-z0-9@])"
+						replacement=""
+						replace="all" />
+			</analyzer>
+		</fieldtype>
+
+		<fieldtype name="search_phone"
+				   class="solr.TextField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+				   positionIncrementGap="1">
+			<analyzer>
+				<tokenizer class="solr.KeywordTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory" />
+				<filter class="solr.PatternReplaceFilterFactory" pattern="[^0-9]+" replacement="" replace="all" />
+				<filter class="solr.ReverseStringFilterFactory" />
+				<filter class="solr.EdgeNGramFilterFactory" minGramSize="7" maxGramSize="15" />
+			</analyzer>
+		</fieldtype>
+
+		<fieldtype name="search_phrase"
+				   class="solr.TextField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+				   positionIncrementGap="1">
+			<analyzer>
+				<tokenizer class="solr.StandardTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory" />
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+
+		<!-- Broken out in case we want to get fancy with common spellings/nicknames -->
+		<fieldtype name="search_first_name"
+				   class="solr.TextField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+		           positionIncrementGap="100">
+			<analyzer>
+				<tokenizer class="solr.WhitespaceTokenizerFactory"/>
+				<filter class="solr.ASCIIFoldingFilterFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<!-- Because, yeah... people really do put their company name in the First Name field -->
+				<filter class="solr.StopFilterFactory" words="us_can_corporate_entities.txt" />
+				<filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+			</analyzer>
+		</fieldtype>
+
+		<fieldtype name="search_first_name_variants"
+				   class="solr.TextField"
+				   multiValued="true"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true"
+				   positionIncrementGap="100">
+			<analyzer type="index">
+				<tokenizer class="solr.WhitespaceTokenizerFactory"/>
+				<filter class="solr.ASCIIFoldingFilterFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<!-- Because, yeah... people really do put their company name in the First Name field -->
+				<filter class="solr.StopFilterFactory" words="us_can_corporate_entities.txt" />
+				<filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms_for_firstname.txt" ignoreCase="true" />
+				<filter class="solr.FlattenGraphFilterFactory"/> <!-- required on index analyzers after graph filters -->
+				<filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+			<analyzer type="query">
+				<tokenizer class="solr.WhitespaceTokenizerFactory"/>
+				<filter class="solr.ASCIIFoldingFilterFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms_for_firstname.txt" ignoreCase="true" />
+				<filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<!-- Lastname:  shingle affixes and then drop out the remaining single affixes  -->
+		<fieldtype name="search_last_name"
+				   class="solr.TextField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true">
+			<analyzer>
+				<tokenizer class="solr.WhitespaceTokenizerFactory" />
+				<filter class="solr.PatternReplaceFilterFactory" pattern="([',\.])" replacement="" replace="all"/><!-- handle O'Brian -->
+				<filter class="solr.ASCIIFoldingFilterFactory" /><!-- handle accénts -->
+				<filter class="solr.LowerCaseFilterFactory" /><!-- lowercase first so that WDFF doesn't parse McDonald into Mc Donald -->
+				<filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" /><!-- handle hyphenated surnames -->
+				<filter class="solr.CommonGramsFilterFactory" words="affixes_for_lastname.txt" /><!-- handle common suffixes like jr, sr, iii and prefixes: de, van, etc... ) -->
+				<filter class="solr.StopFilterFactory" words="affixes_for_lastname.txt" />
+			</analyzer>
+		</fieldtype>
+
+		<fieldtype name="search_last_initial"
+				   class="solr.TextField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true">
+			<analyzer>
+				<tokenizer class="solr.LetterTokenizerFactory" maxTokenLen="16"/>
+				<filter class="solr.LowerCaseFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<!-- Broken out in case we want to get fancy with company stopwords/commongrams (Inc., Ltd., etc...) -->
+		<fieldtype name="search_company"
+				   class="solr.TextField"
+				   multiValued="false"
+				   indexed="true"
+				   stored="false"
+				   omitNorms="true">
+			<analyzer>
+				<tokenizer class="solr.LetterTokenizerFactory" maxTokenLen="256" />
+				<filter class="solr.LowerCaseFilterFactory" />
+				<filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" />
+				<filter class="solr.PatternReplaceFilterFactory" pattern="([^a-z0-9]+)" replacement="" replace="all"/>
+				<filter class="solr.CommonGramsFilterFactory" words="us_can_corporate_entities.txt" />
+				<filter class="solr.StopFilterFactory" words="us_can_corporate_entities.txt" />
+			</analyzer>
+		</fieldtype>
+
+
+		<fieldtype name="search_qualifications_text"
+				   class="solr.TextField"
+				   multiValued="true"
+				   positionIncrementGap="100"
+				   omitNorms="true"
+				   indexed="true">
+			<similarity class="solr.BM25SimilarityFactory">
+				<float name="k1">0.2</float><!-- k1=0.2: default=1.2 ... but we want to saturate tf more quickly -->
+				<float name="b">0.0</float><!-- b=0: default=0.75 ... but we want to ignore length normalization effect  -->
+				<!-- Note:  omitNorms should also cause length normalization to be ignored as well -->
+			</similarity>
+			<!-- TODO:  This is probably overkill (cribbed from polymath / skillsText in usercore) -->
+			<analyzer>
+				<charFilter class="solr.HTMLStripCharFilterFactory"/>
+				<tokenizer class="solr.StandardTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<filter class="solr.ApostropheFilterFactory" />
+				<filter class="solr.KeywordMarkerFilterFactory" protected="protwords_for_skills.txt" />
+				<filter class="solr.EnglishMinimalStemFilterFactory" />
+				<filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_for_skills.txt" />
+				<filter class="solr.ShingleFilterFactory" minShingleSize="2" maxShingleSize="3" outputUnigrams="false" outputUnigramsIfNoShingles="true" tokenSeparator="_" />
+				<filter class="solr.PatternReplaceFilterFactory" pattern="^\_+(.*)|(.*)\_+$" replacement="" />
+				<!-- Remove any numbers (incl version numbers like "2.0") that aren't now part of a shingle (hopefully we've captured model numbers with the product in shingles -->
+				<filter class="solr.PatternReplaceFilterFactory" pattern="^[0-9\._]+$" replacement="" />
+				<filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+
+		<!-- Highlighter fields need to be stored -->
+		<fieldtype name="search_highlight_text"
+				   class="solr.TextField"
+				   multiValued="false"
+				   storeOffsetsWithPositions="true"
+				   omitNorms="true"
+				   indexed="true"
+				   stored="true">
+			<similarity class="solr.BM25SimilarityFactory">
+				<float name="k1">0.2</float><!-- k1=0.2: default=1.2 ... but we want to saturate tf more quickly -->
+				<float name="b">0.0</float><!-- b=0: default=0.75 ... but we want to ignore length normalization effect  -->
+				<!-- Note:  omitNorms should also cause length normalization to be ignored -->
+			</similarity>
+			<analyzer>
+				<charFilter class="solr.HTMLStripCharFilterFactory"/>
+				<charFilter class="solr.PatternReplaceCharFilterFactory" pattern="," replacement=" " />
+				<tokenizer class="solr.StandardTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<filter class="solr.ApostropheFilterFactory" />
+				<filter class="solr.EnglishMinimalStemFilterFactory" />
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<fieldtype name="search_full_name_highlight_text"
+				   class="solr.TextField"
+				   multiValued="false"
+				   storeOffsetsWithPositions="true"
+				   omitNorms="true"
+				   indexed="true"
+				   stored="true">
+			<similarity class="solr.BM25SimilarityFactory">
+				<float name="k1">1.2</float>
+				<float name="b">0.0</float> <!-- short text, so ignore length normalization effect -->
+			</similarity>
+			<analyzer type="index">
+				<tokenizer class="solr.StandardTokenizerFactory"/>
+				<filter class="solr.PatternReplaceFilterFactory" pattern="([',\.])" replacement="" replace="all"/>
+				<filter class="solr.ASCIIFoldingFilterFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+			<analyzer type="query">
+				<tokenizer class="solr.WhitespaceTokenizerFactory"/>
+				<filter class="solr.ASCIIFoldingFilterFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<fieldtype name="search_highlight_multi_text"
+				   class="solr.TextField"
+				   multiValued="true"
+				   storeOffsetsWithPositions="true"
+				   positionIncrementGap="100"
+				   omitNorms="true"
+				   indexed="true"
+				   stored="true">
+			<similarity class="solr.BM25SimilarityFactory">
+				<float name="k1">0.2</float><!-- k1=0.2: default=1.2 ... but we want to saturate tf more quickly -->
+				<float name="b">0.0</float><!-- b=0: default=0.75 ... but we want to ignore length normalization effect  -->
+				<!-- Note:  omitNorms should also cause length normalization to be ignored as well -->
+			</similarity>
+		</fieldtype>
+
+		<!-- Broken out so we can treat skills, certifications, specialties, tools in a custom manner -->
+		<fieldtype name="search_highlight_qualifications_text"
+				   class="solr.TextField"
+				   multiValued="true"
+				   storeOffsetsWithPositions="true"
+				   positionIncrementGap="100"
+				   omitNorms="true"
+				   indexed="true"
+				   stored="true">
+			<similarity class="solr.BM25SimilarityFactory">
+				<float name="k1">0.2</float><!-- k1=0.2: default=1.2 ... but we want to saturate tf more quickly -->
+				<float name="b">0.0</float><!-- b=0: default=0.75 ... but we want to ignore length normalization effect  -->
+				<!-- Note:  omitNorms should also cause length normalization to be ignored -->
+			</similarity>
+			<analyzer>
+				<charFilter class="solr.HTMLStripCharFilterFactory"/>
+				<tokenizer class="solr.StandardTokenizerFactory"/>
+				<filter class="solr.LowerCaseFilterFactory"/>
+				<filter class="solr.ApostropheFilterFactory" />
+				<filter class="solr.KeywordMarkerFilterFactory" protected="protwords_for_skills.txt" />
+				<filter class="solr.EnglishMinimalStemFilterFactory" />
+				<filter class="solr.TrimFilterFactory" />
+			</analyzer>
+		</fieldtype>
+
+		<!--
+			.....................
+			That's all she wrote!
+			.....................
+		-->
+
+		<!-- since fields of this type are by default not stored or indexed, any data added to them will be ignored outright. -->
+		<fieldtype name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField"/>
+
+	</types>
+
+	<!-- unique key -->
+	<uniqueKey>uuid</uniqueKey>
+
+	<fields>
+
+		<!-- For atomic update (still TBD how/if we want to support atomic updates) -->
+		<field name="_version_" type="long" indexed="true" required="false" docValues="true"/>
+
+		<!-- For nested documents (using block-join) -->
+		<field name="_root_" type="search_external_id" />
+
+		<!-- differentiating between parent (worker) and child (customField, selfAssessment) nested types -->
+		<field name="docType" type="filter_string" stored="true" />
+
+		<!--
+			..........
+			searchable
+			..........
+		-->
+		<field name="id" type="search_external_id" required="false" stored="true" /><!-- replaces id:long -->
+		<field name="userNumber" type="search_external_id" stored="true" />
+		<field name="uuid" type="search_external_id" required="true" stored="true" />
+
+		<field name="firstName" type="search_first_name" />
+		<field name="lastName" type="search_last_name" />
+		<field name="fullName" type="search_full_name_highlight_text" />
+
+		<field name="workPhone" type="search_phone" />
+		<field name="mobilePhone" type="search_phone" />
+
+		<!-- removed "overview" which was not being populated to Solr -->
+
+		<field name="email" type="search_email" />
+		<field name="emailExact" type="search_exact" />
+		<field name="companyName" type="search_company" stored="true" />
+		<field name="companyId" type="search_external_id" />
+		<field name="companyUuid" type="search_external_id" docValues="true" />
+
+		<field name="city" type="search_exact" stored="true" />
+		<field name="state" type="search_exact" stored="true" />
+		<field name="postalCode" type="search_exact" stored="true" />
+
+		<!-- DERIVED -->
+		<field name="firstNameVariants" type="search_first_name_variants" />
+		<field name="lastInitial" type="search_last_initial" />
+		<field name="fullNamePhrase" type="search_phrase" />
+		<field name="companyNamePhrase" type="search_phrase" />
+		<!-- /DERIVED -->
+
+		<!--
+		 	............................
+			searchable and highlightable
+		 	............................
+		-->
+		<!-- TODO:  this should be commongram-ed.  "director, manager, product, president, vice", etc... -->
+		<field name="jobTitle" type="search_highlight_qualifications_text" />
+		<field name="jobFunctions" type="search_highlight_qualifications_text" />
+
+		<field name="licenseVendors" type="ignored" />
+		<field name="licenseNames" type="search_highlight_qualifications_text" />
+		<field name="licenseStates" type="ignored" />
+
+		<field name="certificationVendors" type="ignored" />
+		<field name="certificationNames" type="search_highlight_qualifications_text" />
+
+
+		<field name="skillNames" type="search_highlight_qualifications_text" />
+		<field name="toolNames" type="search_highlight_qualifications_text" />
+		<field name="specialtyNames" type="search_highlight_qualifications_text" /><!-- specialties == products in GUI -->
+		<field name="insuranceNames" type="search_highlight_qualifications_text" />
+
+		<!-- TODO:  Don't expose tag names until we can be sure only the right employers see them/search them -->
+		<field name="userTagsSearch" type="search_highlight_qualifications_text" />
+
+		<!-- DERIVED:  TODO: These should require a higher matching threshold... mm=2 or mm=3 -->
+		<field name="certificationVendorsAndNames" type="search_qualifications_text" />
+		<field name="licenseVendorsNamesAndStates" type="search_qualifications_text" />
+		<!--
+		 	..................
+			facets and filters
+		 	..................
+		 -->
+		<field name="userType" type="facet_filter_int" />
+		<field name="companyType" type="facet_filter_int" />
+		<field name="country" type="facet_filter_string" />
+		<field name="skillIds" type="facet_filter_external_id"/>
+		<field name="userTagIds" type="facet_filter_external_id"/>
+		<field name="stateLicenseIds" type="facet_filter_external_id" />
+		<field name="stateLicenses" type="facet_filter_external_id" />
+		<field name="certificationIds" type="facet_filter_external_id"/>
+		<field name="certifications" type="facet_filter_external_id" />
+		<field name="companyAssessmentIds" type="facet_filter_external_id"/>
+		<field name="companyAssessments" type="facet_filter_external_id" />
+		<field name="sharedGroupIds" type="facet_filter_external_id"/>
+		<field name="companyGroupIds" type="facet_filter_external_id"/>
+
+		<field name="groupIds" type="facet_filter_external_id" />
+		<field name="memberGroupIds" type="facet_filter_external_id" />
+		<field name="memberOverrideGroupIds" type="facet_filter_external_id" />
+		<field name="pendingPassedGroupIds" type="facet_filter_external_id" />
+		<field name="pendingFailedGroupIds" type="facet_filter_external_id" />
+		<field name="invitedGroupIds" type="facet_filter_external_id" />
+		<field name="declinedGroupIds" type="facet_filter_external_id" />
+
+		<field name="groupUuids" type="facet_filter_external_id" />
+		<field name="memberGroupUuids" type="facet_filter_external_id" />
+		<field name="memberOverrideGroupUuids" type="facet_filter_external_id" />
+		<field name="pendingPassedGroupUuids" type="facet_filter_external_id" />
+		<field name="pendingFailedGroupUuids" type="facet_filter_external_id" />
+		<field name="invitedGroupUuids" type="facet_filter_external_id" />
+		<field name="declinedGroupUuids" type="facet_filter_external_id" />
+		<field name="laborClouds" type="facet_filter_string" />
+
+		<field name="groupUuidsV2" type="facet_filter_external_id" />
+		<field name="memberGroupUuidsV2" type="facet_filter_external_id" />
+		<field name="memberOverrideGroupUuidsV2" type="facet_filter_external_id" />
+		<field name="pendingPassedGroupUuidsV2" type="facet_filter_external_id" />
+		<field name="pendingFailedGroupUuidsV2" type="facet_filter_external_id" />
+		<field name="invitedGroupUuidsV2" type="facet_filter_external_id" />
+		<field name="declinedGroupUuidsV2" type="facet_filter_external_id" />
+		<field name="laborCloudsV2" type="facet_filter_string" />
+
+		<!-- renamed "industryId" to "industryIds" -->
+		<field name="industryIds" type="facet_filter_external_id" />
+		<field name="industryNames" type="facet_filter_string" />
+
+		<field name="passedBackgroundCheck" type="facet_filter_boolean" />
+		<field name="passedDrugTest" type="facet_filter_boolean"  />
+
+		<!-- TODO:  smarter LANE structure representation -->
+		<field name="lane0CompanyIds" type="facet_filter_external_id" />
+		<field name="lane1CompanyIds" type="facet_filter_external_id" />
+		<field name="lane2CompanyIds" type="facet_filter_external_id" />
+		<field name="lane3CompanyIds" type="facet_filter_external_id" />
+		<field name="lane4Active" type="facet_filter_boolean" />
+
+		<field name="lane0CompanyUuids" type="facet_filter_external_id" />
+		<field name="lane1CompanyUuids" type="facet_filter_external_id" />
+		<field name="lane2CompanyUuids" type="facet_filter_external_id" />
+		<field name="lane3CompanyUuids" type="facet_filter_external_id" />
+
+		<field name="lane3ApprovalStatus" type="facet_filter_int" />
+		<field name="sharedWorkerRole" type="facet_filter_boolean" />
+		<field name="workerRole" type="facet_filter_boolean" />
+		<field name="emailConfirmed" type="facet_filter_boolean" />
+
+		<field name="hasAvatar" type="facet_filter_boolean"/>
+
+		<field name="insuranceIds" type="facet_filter_external_id" />
+		<!--
+			............
+			Filters only
+			............
+		-->
+		<field name="deleted" type="facet_filter_boolean" />
+		<field name="location" type="sort_boost_single_location" />
+		<!-- add locations to make it more apparent as multivalued field -->
+		<field name="locations" type="filter_location" />
+
+		<!-- RequirementSets business (filters only) -->
+		<field name="contractIds" type="filter_external_id" />
+		<field name="maxTravelDistance" type="filter_int" /><!-- implemented wrong in TravelRequirement -->
+		<field name="lastBackgroundCheckDate" type="filter_date" docValues="true" />
+		<field name="lastDrugTestDate" type="filter_date" docValues="true" />
+
+		<!-- TODO:  smarter way to structure multi-field children in Solr? -->
+		<!-- removed "errorsAndOmissionsCoverage, generalLiabilityCoverage, workersCompCoverage, automobileCoverage,
+					  contractorsCoverage, commercialGeneralLiabilityCoverage, businessLiabilityCoverage"
+					THESE ARE used in manage and apply flows, but not search flows.
+		-->
+
+		<field name="blockedUserIds" type="filter_external_id" />
+		<field name="blockedCompanyIds" type="filter_external_id" />
+
+		<field name="blockedUserUuids" type="filter_external_id" />
+		<field name="blockedCompanyUuids" type="filter_external_id" />
+		<field name="blockedByCompanyUuids" type="filter_external_id" />
+		<!-- removed "laneRemovalPending":  Unused in current usercore index -->
+
+		<field name="satisfactionRate" type="filter_int" docValues="true" />
+		<field name="onTimePercentage" type="filter_int" docValues="true" />
+		<field name="deliverableOnTimePercentage" type="filter_int" docValues="true" />
+		<!-- removed "workInvitedIds", "workAssignedIds":  Not currently used in filter -->
+
+		<!-- insurance coverage amounts -->
+		<field name="errorsAndOmissionsCoverage" type="filter_long" />
+		<field name="generalLiabilityCoverage" type="filter_long" />
+		<field name="workersCompCoverage" type="filter_long" />
+		<field name="automobileCoverage" type="filter_long" />
+		<field name="contractorsCoverage" type="filter_long" />
+		<field name="commercialGeneralLiabilityCoverage" type="filter_long" />
+		<field name="businessLiabilityCoverage" type="filter_long" />
+
+		<field name="warpRequisitionId" type="filter_external_id" />
+
+		<field name="userStatusType" type="filter_string" />
+
+		<!-- ORG Structure ACLS -->
+		<field name="orgUnits" type="facet_filter_string"/>
+
+		<!-- kitchen sink for all external UUIDs, those UUIDs could have prefix -->
+		<field name="externalUniqueIds" type="facet_filter_string" />
+
+		<!--
+		 	..........................
+		 	sorting (sort only fields)
+		 	..........................
+		-->
+		<!-- "Total Assignments (High-Low)" -->
+		<field name="workCompletedCount" type="sort_boost_single_int" />
+		<field name="completedOnTimeLabelCount" type="sort_boost_single_int" />
+		<field name="cancelledLabelCount" type="sort_boost_single_int" />
+		<field name="abandonedLabelCount" type="sort_boost_single_int" />
+
+		<!-- "Rating" -->
+		<field name="rating" type="sort_boost_single_int" />
+		<field name="ratingCount" type="sort_boost_single_int" />
+
+		<!-- "Alphabetical" -->
+		<field name="firstNameSort" type="sort_single_string" />
+		<field name="lastNameSort" type="sort_single_string" />
+
+		<!-- "Member Since" -->
+		<field name="createdOn" type="sort_single_date" />
+
+		<!-- "Hourly Rate" -->
+		<field name="hourlyRate" type="sort_boost_single_int" /> <!-- Not populated in Solr -->
+
+
+
+		<!--
+     		.................................
+     		boosting: (boost only fields) TBD
+     		.................................
+		-->
+		<!-- Quality features created for workercore -->
+		<field name="recentWorkingWeeksRatio" type="sort_boost_single_double" />
+		<field name="weightedAverageRating" type="sort_boost_single_double" />
+		<field name="profileModifiedOn" type="sort_single_date" />
+		<field name="latestAssessmentDate" type="sort_single_date" />
+		<field name="latestWorkActiveDate" type="sort_single_date" />
+		<field name="latestLaborCloudActiveDate" type="sort_single_date" />
+
+		<!-- Nested self-assessment document fields -->
+
+		<field name="selfAssessmentId" type="filter_external_id" />
+		<field name="selfAssessmentCompanyUuid" type="search_external_id" />
+		<field name="selfAssessmentName" type="search_phrase" />
+		<field name="selfAssessmentCategoryId" type="filter_external_id" />
+		<field name="selfAssessmentCategoryName" type="search_phrase" />
+		<field name="selfAssessmentItemId" type="filter_external_id" />
+		<field name="selfAssessmentItemName" type="search_phrase" />
+		<field name="selfAssessmentChoiceId" type="filter_external_id" />
+		<field name="selfAssessmentChoiceName" type="search_phrase" />
+		<field name="selfAssessmentChoicePosition" type="filter_int" />
+
+        <!-- Worker availability -->
+		<field name="unavailableOn" type="sort_multi_date" />
+
+		<!--
+			............................
+			Custom Fields support
+			............................
+		-->
+		<!-- The identifier of the custom-field definition -->
+		<field name="cfDefinitionUuid" type="search_external_id" />
+
+		<!-- The primary value stored in the custom-field-instance (field chosen by type: text, long, etc...) -->
+		<field name="cfValueFindText" type="search_highlight_text" stored="false" />
+		<field name="cfValueFilterString" type="facet_filter_string" multiValued="false" />
+		<field name="cfValueFilterLong" type="facet_filter_long" />
+		<field name="cfValueFilterFloat" type="facet_filter_float" />
+		<field name="cfValueFilterDate" type="facet_filter_date" />
+		<field name="cfValueFilterEndDate" type="facet_filter_date" />
+		<field name="cfValueFilterBoolean" type="facet_filter_boolean" />
+		<!-- Selections from a "picklist" with uuids -->
+		<field name="cfValueFilterUuid" type="facet_filter_external_id" multiValued="true" />
+
+		<!-- Any other strings which users might want to filter on (e.g. currency-code, link-type, etc...) -->
+		<field name="cfValueFilterMeta" type="facet_filter_string" multiValued="true" />
+
+
+
+		<!--
+			............................
+			Anything we don't care about
+			............................
+		-->
+		<dynamicField name="*" type="ignored" />
+
+		<!--
+			...........
+			copy fields
+			...........
+		-->
+		<copyField source="firstName" dest="firstNameSort" />
+		<copyField source="lastName" dest="lastNameSort" />
+
+		<copyField source="firstName" dest="firstNameVariants" />
+		<copyField source="lastName" dest="lastInitial" maxChars="1" />
+
+		<copyField source="firstName" dest="fullNamePhrase" />
+		<copyField source="lastName" dest="fullNamePhrase" />
+
+		<copyField source="companyName" dest="companyNamePhrase" />
+
+		<copyField source="certificationVendors" dest="certificationVendorsAndNames" />
+		<copyField source="certificationNames" dest="certificationVendorsAndNames" />
+
+		<copyField source="licenseVendors" dest="licenseVendorsNamesAndStates" />
+		<copyField source="licenseNames" dest="licenseVendorsNamesAndStates" />
+		<copyField source="licenseStates" dest="licenseVendorsNamesAndStates" />
+
+		<copyField source="email" dest="emailExact" />
+
+		<!--
+			 ........................
+			 And that's all she wrote
+			 ........................
+		-->
+	</fields>
+</schema>
+

@@ -1,0 +1,91 @@
+################################
+# These entity abbreviations are used together
+# with CommonGrams as stopwords to reduce the
+# noise caused by matching on these terms alone
+#
+# E.g. "work market inc" will tokenize to
+# [work, market, market_inc]
+# and not match "fisher price inc"
+# (though it will match "boston market inc")
+################################
+
+lc
+llc
+smllc
+pllc
+ltd
+
+lp
+llp
+lllp
+
+corporation
+corp
+co
+pc
+company
+inc
+incorporated
+ltd
+limited
+
+and
+of
+the
+group
+services
+solutions
+systems
+technology
+technologies
+computing
+
+
+########
+# Yes, because people will actually put their email address
+# in the Company Name box, and then match
+#   e.g. on any search containing "hotmail"
+########
+com
+net
+
+# We won't fully lose businesses with these in their names.
+# Those terms will just be contained within shingles like the rest
+# of the less-specific terms above
+# (TODO:  Regex to specifically match only email addresses, and replace with
+# the left-of-the-@ value)... for use in company analysis (AND email analysis)
+
+# But these shingles will be specifically removed in the stopwording step
+yahoo
+yahoo_com
+yahoo_co_uk
+yahoo_co_in
+gmail
+gmail_com
+hotmail
+hotmail_com
+hotmail_co_uk
+msn
+msn_com
+aol
+aol_com
+comcast
+comcast_net
+sbcglobal
+sbcglobal_net
+verizon
+verizon_net
+optimum
+optimum_net
+optonline
+optonline_net
+btinternet
+btinternet_com
+twc
+twc_com
+rr
+rr_com
+roadrunner
+roadrunner_com
+shaw_ca
+

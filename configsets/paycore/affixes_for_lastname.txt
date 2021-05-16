@@ -1,0 +1,24 @@
+################################
+# These surname affixes are used together
+# with CommonGrams as stopwords to reduce the
+# noise caused by matching on these terms alone
+#
+# E.g. "ludwig van beethoven" will tokenize to
+# [ludwig, van_beethoven, beethoven]
+# and not match "jim van dewitt"
+################################
+
+jr
+sr
+iii
+iv
+van
+von
+de
+di
+du
+der
+la
+le
+zum
+ten

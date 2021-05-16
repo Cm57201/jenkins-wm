@@ -1,0 +1,618 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one or more
+ contributor license agreements.  See the NOTICE file distributed with
+ this work for additional information regarding copyright ownership.
+ The ASF licenses this file to You under the Apache License, Version 2.0
+ (the "License"); you may not use this file except in compliance with
+ the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
+<schema name="workcore" version="1.6">
+
+    <similarity class="solr.SchemaSimilarityFactory"/>
+
+    <types>
+        <fieldtype name="string" class="solr.StrField" sortMissingLast="true" omitNorms="true"/>
+        <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true" omitNorms="true"/>
+        <fieldType name="int" class="solr.IntPointField" omitNorms="true" />
+        <fieldType name="float" class="solr.FloatPointField" omitNorms="true" />
+        <fieldType name="long" class="solr.LongPointField" omitNorms="true" />
+        <fieldType name="double" class="solr.DoublePointField" omitNorms="true" />
+        <fieldType name="date" class="solr.DatePointField" omitNorms="true" />
+
+        <!-- This point type indexes the coordinates as separate fields (subFields) If subFieldType is defined, it references a type, and
+                a dynamic field definition is created matching *___<typename>. Alternately, if subFieldSuffix is defined, that is used to create the
+                subFields. Example: if subFieldType="double", then the coordinates would be indexed in fields myloc_0___double,myloc_1___double. Example:
+                if subFieldSuffix="_d" then the coordinates would be indexed in fields myloc_0_d,myloc_1_d The subFields are an implementation detail
+                of the fieldType, and end users normally should not need to know about them. -->
+        <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
+
+        <!-- A specialized field for geospatial search. -->
+        <fieldType name="location" class="solr.LatLonPointSpatialField" docValues="true"/>
+
+        <!-- This fieldType to be used for filtering by ORG groups -->
+        <fieldtype name="facet_filter_string"
+                   class="solr.StrField"
+                   multiValued="true"
+                   indexed="true"
+                   stored="false"
+                   docValues="true"
+                   omitNorms="true"
+        />
+        <fieldtype name="facet_filter_int"
+                   class="solr.IntPointField"
+                   indexed="true"
+                   docValues="true"
+                   stored="false"
+                   omitNorms="true"
+        />
+        <fieldtype name="facet_filter_long"
+                   class="solr.LongPointField"
+                   indexed="true"
+                   docValues="true"
+                   stored="false"
+        />
+        <fieldtype name="facet_filter_float"
+                   class="solr.FloatPointField"
+                   indexed="true"
+                   docValues="true"
+                   stored="false"
+        />
+        <fieldtype name="facet_filter_date"
+                   class="solr.DatePointField"
+                   indexed="true"
+                   docValues="true"
+                   stored="false"
+                   omitNorms="true"
+        />
+        <fieldtype name="facet_filter_boolean"
+                   class="solr.BoolField"
+                   indexed="true"
+                   docValues="true"
+                   stored="false"
+                   omitNorms="true"
+        />
+        <fieldtype name="facet_filter_external_id"
+                   class="solr.StrField"
+                   multiValued="true"
+                   indexed="true"
+                   docValues="true"
+                   stored="false"
+                   omitNorms="true"
+        />
+
+        <!-- A text field that uses WordDelimiterGraphFilterFactory to enable splitting and matching of words on case-change, alpha numeric boundaries,
+                and non-alphanumeric chars, so that a query of "wifi" or "wi fi" could match a document containing "Wi-Fi". Synonyms and stopwords
+                are customized by external files, and stemming is enabled. -->
+        <fieldType name="text" class="solr.TextField" positionIncrementGap="100">
+            <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.FlattenGraphFilterFactory"/> <!-- required on index analyzers after graph filters -->
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" />
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                        catenateWords="1"
+                        catenateNumbers="1" catenateAll="0" splitOnCaseChange="1"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                        catenateWords="0"
+                        catenateNumbers="0" catenateAll="0" splitOnCaseChange="1"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
+            </analyzer>
+        </fieldType>
+
+        <fieldType name="textgen" class="solr.TextField" positionIncrementGap="100">
+            <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.FlattenGraphFilterFactory"/> <!-- required on index analyzers after graph filters -->
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                        catenateWords="1"
+                        catenateNumbers="1" catenateAll="0" splitOnCaseChange="0"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                        catenateWords="0"
+                        catenateNumbers="0" catenateAll="0" splitOnCaseChange="0"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+            </analyzer>
+        </fieldType>
+
+        <fieldType name="skillsText" class="solr.TextField" positionIncrementGap="100">
+            <analyzer type="index">
+                <charFilter class="solr.HTMLStripCharFilterFactory"/>
+                <tokenizer class="solr.StandardTokenizerFactory"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.KeywordMarkerFilterFactory" protected="protwords_for_skills.txt" />
+                <filter class="solr.EnglishMinimalStemFilterFactory" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_for_skills.txt" />
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms_for_skills.txt" ignoreCase="true" />
+                <filter class="solr.FlattenGraphFilterFactory"/> <!-- required on index analyzers after graph filters -->
+                <!-- Additionally add in two-word shingles for MLT to find.  Need to do the same on the usercore side -->
+                <filter class="solr.ShingleFilterFactory" minShingleSize="2" maxShingleSize="2" outputUnigrams="true" tokenSeparator="_" />
+                <filter class="solr.PatternReplaceFilterFactory"
+                        pattern="^\_+(.*)|(.*)\_+$" replacement=""
+                />
+                <!-- Remove any numbers (incl version numbers like "2.0") that aren't now part of a shingle (hopefully we've captured model numbers with the product in shingles -->
+                <filter class="solr.PatternReplaceFilterFactory"
+                        pattern="^[0-9\._]+$" replacement=""
+                />
+                <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+            </analyzer>
+            <analyzer type="query">
+                <charFilter class="solr.HTMLStripCharFilterFactory"/>
+                <tokenizer class="solr.StandardTokenizerFactory"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.KeywordMarkerFilterFactory" protected="protwords_for_skills.txt" />
+                <filter class="solr.EnglishMinimalStemFilterFactory" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_for_skills.txt" />
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms_for_skills.txt" ignoreCase="true" />
+                <!-- Additionally add in two-word shingles for MLT to find.  Need to do the same on the usercore side -->
+                <filter class="solr.ShingleFilterFactory" minShingleSize="2" maxShingleSize="2" outputUnigrams="true" tokenSeparator="_" />
+                <filter class="solr.PatternReplaceFilterFactory"
+                        pattern="^\_+(.*)|(.*)\_+$" replacement=""
+                />
+                <!-- Remove any numbers that aren't now part of a shingle (hopefully we've captured model numbers with the product in shingles -->
+                <filter class="solr.PatternReplaceFilterFactory"
+                        pattern="^[0-9\.]+$" replacement=""
+                />
+                <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+            </analyzer>
+        </fieldType>
+
+
+        <fieldType name="textEnhanced" class="solr.TextField" positionIncrementGap="100">
+            <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.FlattenGraphFilterFactory"/> <!-- required on index analyzers after graph filters -->
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                        catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="1" preserveOriginal="1"
+                        splitOnNumerics="0"/>
+                <filter class="solr.TrimFilterFactory" />
+                <filter class="solr.EdgeNGramFilterFactory" minGramSize="3" maxGramSize="15" />
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.LengthFilterFactory" min="2" max="999999999"/>
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                        catenateWords="0"
+                        catenateNumbers="0" catenateAll="0" splitOnCaseChange="1"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+            </analyzer>
+        </fieldType>
+
+        <!-- Less flexible matching, but less false matches. Probably not ideal for product names, but may be good for SKUs. Can insert dashes
+                in the wrong place and still match. -->
+        <fieldType name="textTight" class="solr.TextField" positionIncrementGap="100">
+            <analyzer>
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="0" generateNumberParts="0"
+                        catenateWords="1"
+                        catenateNumbers="1" catenateAll="0"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
+                <!-- this filter can remove any duplicate tokens that appear at the same position - sometimes possible with WordDelimiterFilter
+                        in conjuncton with stemming. -->
+                <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+            </analyzer>
+        </fieldType>
+
+        <fieldType name="textState" class="solr.TextField" positionIncrementGap="100">
+            <analyzer type="index">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.FlattenGraphFilterFactory"/> <!-- required on index analyzers after graph filters -->
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_for_state.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                                catenateWords="1"
+                                catenateNumbers="1" catenateAll="0" splitOnCaseChange="1" preserveOriginal="1"/>
+                <filter class="solr.TrimFilterFactory" />
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
+                <filter class="solr.ReversedWildcardFilterFactory" withOriginal="true" maxPosAsterisk="3"
+                                maxPosQuestion="2" maxFractionAsterisk="0.33"/>
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.SynonymGraphFilterFactory" synonyms="synonyms.txt" ignoreCase="true" />
+                <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_for_state.txt"/>
+                <filter class="solr.WordDelimiterGraphFilterFactory" generateWordParts="1" generateNumberParts="1"
+                                catenateWords="0"
+                                catenateNumbers="0" catenateAll="0" splitOnCaseChange="1"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.SnowballPorterFilterFactory" language="English" protected="protwords.txt"/>
+            </analyzer>
+        </fieldType>
+
+        <!-- better sort fieldType for string -->
+        <fieldtype name="sort_single_string"
+                   class="solr.TextField"
+                   multiValued="false"
+                   indexed="true"
+                   stored="false"
+                   sortMissingLast="true"
+                   omitNorms="true"
+                   omitTermFreqAndPositions="true">
+            <analyzer>
+                <tokenizer class="solr.KeywordTokenizerFactory"/>
+                <filter class="solr.LowerCaseFilterFactory" />
+                <filter class="solr.TrimFilterFactory" />
+            </analyzer>
+        </fieldtype>
+
+        <fieldtype name="sort_single_date"
+                   class="solr.DatePointField"
+                   multiValued="false"
+                   indexed="true"
+                   stored="false"
+                   docValues="true"
+                   omitNorms="true"
+        />
+
+        <!-- since fields of this type are by default not stored or indexed, any data added to them will be ignored outright. -->
+        <fieldtype name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField"/>
+
+        <fieldtype name="search_external_id"
+                   class="solr.StrField"
+                   multiValued="false"
+                   indexed="true"
+                   stored="true"
+                   omitNorms="true"
+        />
+
+        <fieldtype name="search_suggest_highlight_text"
+                   class="solr.TextField"
+                   multiValued="false"
+                   storeOffsetsWithPositions="true"
+                   omitNorms="true"
+                   indexed="true"
+                   stored="true">
+            <similarity class="solr.BM25SimilarityFactory">
+                <float name="k1">1.2</float>
+                <float name="b">0.0</float> <!-- short text, so ignore length normalization effect -->
+            </similarity>
+            <analyzer type="index">
+                <tokenizer class="solr.StandardTokenizerFactory"/>
+                <filter class="solr.PatternReplaceFilterFactory" pattern="([',\.])" replacement="" replace="all"/>
+                <filter class="solr.ASCIIFoldingFilterFactory"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+                <filter class="solr.TrimFilterFactory" />
+            </analyzer>
+            <analyzer type="query">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="solr.ASCIIFoldingFilterFactory"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.RemoveDuplicatesTokenFilterFactory"/>
+                <filter class="solr.TrimFilterFactory" />
+            </analyzer>
+        </fieldtype>
+
+        <!-- Highlighter fields need to be stored -->
+        <fieldtype name="search_highlight_text"
+                   class="solr.TextField"
+                   multiValued="false"
+                   storeOffsetsWithPositions="true"
+                   omitNorms="true"
+                   indexed="true"
+                   stored="true">
+            <similarity class="solr.BM25SimilarityFactory">
+                <float name="k1">0.2</float><!-- k1=0.2: default=1.2 ... but we want to saturate tf more quickly -->
+                <float name="b">0.0</float><!-- b=0: default=0.75 ... but we want to ignore length normalization effect  -->
+                <!-- Note:  omitNorms should also cause length normalization to be ignored -->
+            </similarity>
+            <analyzer>
+                <charFilter class="solr.HTMLStripCharFilterFactory"/>
+                <tokenizer class="solr.StandardTokenizerFactory"/>
+                <filter class="solr.LowerCaseFilterFactory"/>
+                <filter class="solr.ApostropheFilterFactory" />
+                <filter class="solr.EnglishMinimalStemFilterFactory" />
+                <filter class="solr.TrimFilterFactory" />
+            </analyzer>
+        </fieldtype>
+
+    </types>
+
+
+    <fields>
+
+        <!-- For atomic update (still TBD how/if we want to support atomic updates) -->
+        <field name="_version_" type="long" indexed="true" required="false" docValues="true"/>
+
+        <!-- For nested documents (using block-join) -->
+        <field name="_root_" type="search_external_id" />
+
+        <field name="id" type="long" indexed="true" stored="false" docValues="true" required="false"/>
+
+        <field name="uuid" type="search_external_id" stored="true" required="true" />
+
+        <field name="title" type="textEnhanced" indexed="true" stored="true" termVectors="true"/>
+        <field name="titleMatch" type="skillsText" indexed="true" stored="false" termVectors="true"/>
+        <field name="titleSuggest" type="search_suggest_highlight_text" indexed="true" stored="true" termVectors="false" />
+        <field name="publicTitle" type="textEnhanced" indexed="true" stored="true"/>
+        <field name="description" type="textgen" indexed="true" stored="false"/>
+        <field name="skills" type="textgen" indexed="true" stored="true" termVectors="true"/>
+        <field name="skillsMatch" type="skillsText" indexed="true" stored="false" multiValued="true" termVectors="true"/>
+        <field name="instructions" type="textEnhanced" indexed="true" stored="false"/>
+        <field name="workNumber" type="string" indexed="true" stored="true" multiValued="false"/>
+
+        <field name="uniqueExternalId" type="textEnhanced" indexed="true" stored="true"/>
+        <field name="recurrenceUUID" type="search_external_id" stored="true"/>
+
+        <field name="qualificationMatch" type="skillsText" indexed="true" stored="false" multiValued="true" termVectors="true"/>
+
+        <field name="parentId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="parentUuid" type="string" indexed="true" docValues="true" multiValued="false" />
+        <field name="parentTitle" type="textgen" indexed="true" stored="true"/>
+        <field name="parentDescription" type="textgen" indexed="true" stored="false"/>
+        <field name="parentWorkNumber" type="string" indexed="true" docValues="true"/>
+
+        <field name="industryId" type="long" indexed="true" docValues="true" multiValued="false"/>
+        <field name="companyId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="companyUuid" type="string" indexed="true" stored="false" docValues="true" multiValued="false" />
+        <field name="companyIdString" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="companyHasFastFundsEnabled" type="facet_filter_boolean"/>
+
+        <field name="buyerUserId" type="textTight" indexed="true" stored="true"/>
+        <field name="buyerUserUuid" type="string" indexed="true" stored="false" docValues="true" multiValued="false" />
+        <field name="buyerFullName" type="text" indexed="true" stored="true" multiValued="false"/>
+        <field name="companyName" type="text" indexed="true" stored="true" multiValued="false"/>
+
+        <field name="creatorUserId" type="string" indexed="false" stored="false" docValues="true"/>
+        <field name="dispatcherId" type="long" indexed="true" stored="false" docValues="true"/>
+
+        <field name="workStatusTypeCode" type="string" indexed="true" stored="false" docValues="true"/>
+        <field name="searchableWorkStatusTypeCode" type="string" indexed="true" stored="false" docValues="true" multiValued="true"/>
+        <field name="searchableWorkStatusTypeCodeV2" type="facet_filter_string"/>
+        <field name="resourceWorkStatusTypeCode" type="string" indexed="true" stored="false" docValues="true" multiValued="true"/>
+        <field name="workStatusTypeDescription" type="text" indexed="true" stored="true"/>
+
+        <!-- Price info -->
+        <field name="pricingType" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="buyerFee" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="buyerTotalCost" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="workPrice" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="spendLimit" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="spendLimitWithFee" type="double" indexed="false" stored="false" docValues="true" multiValued="false"/>
+
+        <field name="workFeePercentage" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="amountEarned" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+
+        <field name="invoiceId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="invoiceNumber" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="invoiceDueDate" type="facet_filter_date"/>
+        <field name="fastFundedOn" type="facet_filter_date"/>
+        <field name="autoPayEnabled" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+
+        <field name="tieredPricing" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="discountPercentage" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="discountTermsDays" type="int" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="tieredPricingAccepted" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="paymentTermsDays" type="int" indexed="true" stored="false" docValues="true" multiValued="false"/>
+
+        <!-- Deliverables -->
+        <field name="deliverablesPercentage" type="double" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="deliverablesDueDate" type="date" indexed="true" stored="false" docValues="true" multiValued="false"/>
+
+        <!-- Modified On -->
+        <field name="lastModifiedDate" type="sort_single_date" />
+        <field name="modifierLastName" type="textgen" indexed="false" stored="true"/>
+        <field name="modifierFirstName" type="textgen" indexed="false" stored="true"/>
+
+        <!-- Client -->
+        <field name="clientLocationId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="clientLocationName" type="textgen" indexed="true" stored="true" multiValued="false"/>
+        <field name="clientLocationNumber" type="textgen" indexed="true" stored="true" multiValued="false"/>
+        <field name="clientCompanyId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="clientCompanyName" type="textgen" indexed="true" stored="true" multiValued="false"/>
+        <field name="clientCompanyUuid" type="string" indexed="true" stored="false" docValues="true" multiValued="false" />
+
+        <!-- Contacts -->
+        <field name="contactName" type="textgen" indexed="true" stored="true"/>
+        <field name="contactPhone" type="textgen" indexed="true" stored="true"/>
+        <field name="contactEmail" type="textgen" indexed="true" stored="true"/>
+        <field name="supportName" type="textgen" indexed="true" stored="true"/>
+        <field name="supportPhone" type="textgen" indexed="false" stored="true"/>
+        <field name="supportEmail" type="textgen" indexed="true" stored="true"/>
+
+        <!-- Project -->
+        <field name="projectId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="projectName" type="text" indexed="true" stored="true" multiValued="false"/>
+        <field name="projectUuid" type="string" indexed="true" stored="false" docValues="true" multiValued="false" />
+
+        <!-- Resources -->
+        <field name="workResourceIds" type="long" indexed="true" stored="false" docValues="true" multiValued="true"/>
+        <field name="workResourceUuids" type="facet_filter_external_id"/>
+        <field name="workResourceCompanyIds" type="long" indexed="true" docValues="true" multiValued="true"/>
+        <field name="workResourceCompanyUuids" type="facet_filter_external_id"/>
+        <field name="workResourceNames" type="textgen" indexed="true" stored="false" multiValued="true"/>
+        <field name="applicantIds" type="long" indexed="true" stored="false" docValues="true" multiValued="true"/>
+        <field name="applicantUuids" type="facet_filter_external_id"/>
+        <field name="cancelledWorkResourceIds" type="long" indexed="true" stored="false" docValues="true" multiValued="true"/>
+        <field name="cancelledWorkResourceUuids" type="string" indexed="true" stored="false" docValues="true" multiValued="true"/>
+        <field name="vendorUuids" type="string" indexed="true" docValues="true" multiValued="true"/>
+
+        <field name="assignedResourceId" type="long" indexed="true" docValues="true" multiValued="false"/>
+        <field name="assignedResourceUuid" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="assignedResourceUserNumber" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="assignedResourceCompanyName" type="textgen" indexed="true" stored="true" multiValued="false"/>
+        <field name="assignedResourceCompanyUuid" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="assignedResourceFirstName" type="textgen" indexed="true" stored="true" multiValued="false"/>
+        <field name="assignedResourceLastName" type="textgen" indexed="true" stored="true" multiValued="false"/>
+        <field name="assignedResourceName" type="textgen" indexed="true" stored="true" multiValued="true"/>
+        <field name="assignedResourceCompanyId" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="assignedResourceMobile" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="assignedResourceWorkPhoneNumber" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="assignedResourceWorkPhoneExtension" type="string" indexed="false" stored="false" docValues="true"
+               multiValued="false"/>
+        <field name="assignedResourceAvatarUri" type="string" indexed="false" stored="false" docValues="true"/>
+        <field name="assignedResourceFullName" type="search_suggest_highlight_text" />
+
+        <!-- Custom fields -->
+        <field name="buyerCustomFieldNames" type="text" indexed="true" stored="false" multiValued="true"/>
+        <field name="buyerCustomFieldValues" type="text" indexed="true" stored="false" multiValued="true"/>
+
+        <!-- Followers -->
+        <field name="followerIds" type="textTight" indexed="true" stored="false" multiValued="true"/>
+        <field name="followerUuids" type="facet_filter_string"/>
+
+        <!-- Work sub status aka labels -->
+        <field name="buyerLabelsId" type="long" indexed="true" stored="false" multiValued="true"/>
+        <field name="buyerLabelsIdDescription" type="string" indexed="true" docValues="true"
+               multiValued="true"/>
+        <field name="buyerLabels" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="buyerLabelsWorkStatusIdDescription" type="string" indexed="false" docValues="true"
+               multiValued="true"/>
+        <field name="resourceLabels" type="string" indexed="true" docValues="true" multiValued="true"/>
+
+        <!-- Dates -->
+        <field name="indexDate" type="sort_single_date" />
+        <field name="createdDate" type="sort_single_date" />
+        <field name="assignedResourceAppointmentFrom" type="sort_single_date" />
+        <field name="assignedResourceAppointmentThrough" type="sort_single_date" />
+
+        <field name="scheduleFromDate" type="sort_single_date" />
+        <field name="scheduleThroughDate" type="sort_single_date" />
+        <field name="paidDate" type="sort_single_date" />
+        <field name="sendDate" type="sort_single_date" />
+        <field name="approvedDate" type="sort_single_date" />
+        <field name="completedDate" type="sort_single_date" />
+        <field name="dueDate" type="sort_single_date" />
+        <field name="lastAssignedWorkDate" type="sort_single_date" />
+
+        <!-- Location -->
+        <field name="city" type="text" indexed="true" stored="true" multiValued="false"/>
+        <field name="state" type="textState" indexed="true" stored="true" multiValued="false"/>
+        <field name="postalCode" type="text" indexed="true" stored="true"/>
+        <field name="country" type="string" indexed="true" stored="false" docValues="true"/>
+        <field name="latitude" type="double" indexed="true" stored="false" docValues="true"/>
+        <field name="longitude" type="double" indexed="true" stored="false" docValues="true"/>
+        <field name="location" type="location" indexed="true" stored="false" docValues="true"/>
+        <field name="countyId" type="long" indexed="true" stored="false" docValues="true"/>
+        <field name="countyName" type="string" indexed="true" stored="false" docValues="true"/>
+        <field name="addressLine1" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="addressLine2" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
+
+        <!-- Flags and Extras -->
+        <field name="showInFeed" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="showInAuthorizedFeed" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false" default="true"/>
+        <field name="offSite" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="timeZoneId" type="string" indexed="false" stored="false" docValues="true" multiValued="false" required="false"/>
+        <field name="confirmed" type="boolean" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="applicationsPending" type="boolean" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="assignToFirstResource" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="resourceConfirmationRequired" type="boolean" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="multipleDaySchedule" type="boolean" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="titleSort" type="sort_single_string" />
+
+        <!-- ORG Structure ACLS -->
+        <field name="orgUnits" type="facet_filter_string"/>
+
+        <!-- kitchen sink for all external UUIDs those UUIDs could have prefix -->
+        <field name="externalUniqueIds" type="facet_filter_string" stored="true"/>
+
+        <!-- Routing -->
+        <field name="routedToGroups" type="long" indexed="true" stored="false" docValues="true" multiValued="true"/>
+
+        <field name="deleted" type="ignored" />
+
+        <!--
+            ............................
+            Custom Fields support
+            ............................
+        -->
+        <!-- The identifier of the custom-field definition -->
+        <field name="cfDefinitionUuid" type="search_external_id" />
+
+        <!-- The primary value stored in the custom-field-instance (field chosen by type: text, long, etc...) -->
+        <field name="cfValueFindText" type="search_highlight_text" />
+        <field name="cfValueFilterLong" type="facet_filter_long" />
+        <field name="cfValueFilterFloat" type="facet_filter_float" />
+        <field name="cfValueFilterDate" type="facet_filter_date" />
+        <field name="cfValueFilterEndDate" type="facet_filter_date" />
+        <field name="cfValueFilterBoolean" type="facet_filter_boolean" />
+        <!-- Selections from a "picklist" with uuids -->
+        <field name="cfValueFilterUuid" type="facet_filter_external_id" />
+
+        <!-- Any other strings which users might want to filter on (e.g. currency-code, link-type, etc...) -->
+        <field name="cfValueFilterMeta" type="facet_filter_string" multiValued="true" />
+
+        <!-- Copy Fields -->
+
+        <!-- For matching -->
+        <copyField source="title" dest="qualificationMatch"/>
+        <copyField source="skills" dest="qualificationMatch"/>
+
+        <!-- for title typeahead -->
+        <copyField source="title" dest="titleSuggest" />
+
+        <!-- sorting -->
+        <copyField source="title" dest="titleSort"/>
+
+        <copyField source="assignedResourceFirstName" dest="assignedResourceName"/>
+        <copyField source="assignedResourceLastName" dest="assignedResourceName"/>
+
+        <copyField source="companyId" dest="companyIdString"/>
+
+        <!-- Dynamic field definitions.  If a field name is not found, dynamicFields
+                 will be used if the name matches any of the patterns.
+                 RESTRICTION: the glob-like pattern in the name attribute must have
+                 a "*" only at the start or the end.
+                 EXAMPLE:  name="*_i" will match any field ending in _i (like myid_i, z_i)
+                 Longer patterns will be matched first.  if equal size patterns
+                 both match, the first appearing in the schema will be used.  -->
+        <dynamicField name="*_i" type="int" indexed="true" stored="true"/>
+        <dynamicField name="*_s" type="string" indexed="true" stored="true"/>
+        <dynamicField name="*_l" type="long" indexed="true" stored="true"/>
+        <dynamicField name="*_t" type="text" indexed="true" stored="true"/>
+        <dynamicField name="*_b" type="boolean" indexed="true" stored="true"/>
+        <dynamicField name="*_f" type="float" indexed="true" stored="true"/>
+        <dynamicField name="*_d" type="double" indexed="true" stored="true"/>
+        <dynamicField name="*_dt" type="date" indexed="true" stored="true"/>
+
+        <!-- some trie-coded dynamic fields for faster range queries -->
+        <dynamicField name="*_ti" type="int" indexed="true" stored="true"/>
+        <dynamicField name="*_tl" type="long" indexed="true" stored="true"/>
+        <dynamicField name="*_tf" type="float" indexed="true" stored="true"/>
+        <dynamicField name="*_td" type="double" indexed="true" stored="true"/>
+        <dynamicField name="*_tdt" type="date" indexed="true" stored="true"/>
+
+        <dynamicField name="ignored_*" type="ignored" multiValued="true"/>
+        <dynamicField name="attr_*" type="textgen" indexed="true" stored="true" multiValued="true"/>
+        <dynamicField name="*_coordinate" type="double" indexed="true" stored="false"/>
+
+    </fields>
+
+    <!-- Field to use to determine and enforce document uniqueness.
+             Unless this field is marked with required="false", it will be a required field
+        -->
+    <uniqueKey>uuid</uniqueKey>
+
+</schema>
