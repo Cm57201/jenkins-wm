@@ -68,6 +68,7 @@ properties([
 						script {
 							def collections_list = params.CollectionValues.split(",")
 								docker.image('solr:8.8.1').inside(){
+								  input 'stop'
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
 									}
