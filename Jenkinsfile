@@ -49,16 +49,35 @@ properties([
 				}
 			}
 			stage('install-docker') {
-				agent {
-					docker {
-						image 'solr:8.8.1'
-					}
-				}
+
 				steps {
 					sh 'solr version'
 				}
 			}
 
+			stage('deploy-managedschema') {
+			    
+
+			  when {
+			        expression {
+			          params.CollectionValues.split(",").size() > 0
+			        }
+			      }
+			      steps {
+
+			        sh 'echo "Deploying managed schema"'
+			        echo params.ENV
+			        echo "${params.CollectionValues}"
+			        sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
+			        script {
+			          def collections_list = params.CollectionValues.split(",")
+			          docker.image('solr:8.8.1').inside(){
+			          for (String collection: collections_list)
+			            echo "Got collection: " + collection
+			          }
+			        }
+			      }
+			    }
 
 		}
 
