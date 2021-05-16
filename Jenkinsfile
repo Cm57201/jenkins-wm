@@ -56,7 +56,7 @@ properties([
 			}
 
 			stage('deploy-managedschema') {
-			    
+
 
 			  when {
 			        expression {
@@ -71,7 +71,7 @@ properties([
 			        sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
 			        script {
 			          def collections_list = params.CollectionValues.split(",")
-			          docker.image('solr:8.8.1').inside(){
+			          docker.inside(){
 			          for (String collection: collections_list)
 			            echo "Got collection: " + collection
 			          }
