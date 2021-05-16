@@ -9,11 +9,7 @@ properties([
 	env.ENVIRONMENT = params.ENV
 	env.ENVIRONMENT_TAG = ['development': 'Development', 'qa': 'QA', 'production': 'Production'][env.ENVIRONMENT]
 	pipeline {
-		agent {
-			docker {
-				image 'solr:8.8.1'
-			}
-		}
+
 		parameters {
 			choice(name: 'ENV', choices: ['development', 'qa', 'production'], description: 'Enter the environment you want to deploy to')
 				extendedChoice(defaultValue: '', description: '', descriptionPropertyValue: '', multiSelectDelimiter: ',', name: 'CollectionValues', quoteValue: false, saveJSONParameterToFile: false, type: 'PT_CHECKBOX', value: 'paycore, workercore, skillcore, clientcore, projectcore, workcore, paycore2, groupcore', visibleItemCount: 8)
@@ -21,7 +17,7 @@ properties([
 		stages {
 			stage('build') {
 				steps {
-					sh 'solr version'
+					sh 'ls -lrt'
 				}
 			}
 			stage('rebuild-pod') {
@@ -51,7 +47,7 @@ properties([
 			stage('install-docker') {
 
 				steps {
-					sh 'solr version'
+					sh 'ls -lrt'
 				}
 			}
 
