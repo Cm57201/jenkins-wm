@@ -11,7 +11,7 @@ properties([
 	pipeline {
 		agent {
 			docker {
-				image 'maven:3.3.3'
+				image 'solr:8.8.1'
 			}
 		}
 		parameters {
@@ -21,7 +21,7 @@ properties([
 		stages {
 			stage('build') {
 				steps {
-					sh 'mvn --version'
+					sh 'bin/solr version'
 				}
 			}
 			stage('rebuild-pod') {
@@ -40,7 +40,7 @@ properties([
 			stage('check-selected-collections') {
 				steps {
 					script {
-						if (!params.CollectionValues?.trim()) {        
+						if (!params.CollectionValues?.trim()) {
 							echo "Atleast one collection has to be selected"
 								currentBuild.result = "FAIL"
 								return
@@ -53,39 +53,14 @@ properties([
 					docker {
 						image 'solr:8.8.1'
 					}
-				} 
+				}
 				steps {
+				  input 'stop'
 					sh 'bin/solr version'
 				}
 			}
 
-			stage('deploy-managedschema') {
-				agent {
-					docker {
-						image 'solr:8.8.1'
-					}
-				}    
 
-				when {
-					expression {
-						params.CollectionValues.split(",").size() > 0
-					}
-				}
-				steps {
-
-					sh 'echo "Deploying managed schema"'
-						echo params.ENV
-						echo "${params.CollectionValues}"
-						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
-						script {
-							def collections_list = params.CollectionValues.split(",")
-								docker.image('solr:8.8.1').inside(){
-									for (String collection: collections_list)
-										echo "Got collection: " + collection
-								}
-						}
-				}
-			}
 		}
 
 		post {
