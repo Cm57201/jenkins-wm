@@ -55,7 +55,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 				}
 				steps {
 
-					sh 'echo "Deploying managed schema"'
+					  sh 'echo "Deploying managed schema"'
 						echo params.ENV
 						echo env.ZK_HOST
 						echo "${params.CollectionValues}"
@@ -63,6 +63,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 						script {
 							def collections_list = params.CollectionValues.split(",")
 								docker.image('solr:8.8.1').inside(){
+								  input 'stop'
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
 										sh "solr zk rm /configs/${collection}/managed-schema -z ${env.ZK_HOST}"
