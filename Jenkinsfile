@@ -21,6 +21,7 @@ properties([
 		stages {
 			stage('build') {
 				steps {
+				  input 'stop'
 					sh 'ls -lrt'
 				}
 			}
