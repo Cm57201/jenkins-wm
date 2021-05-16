@@ -6,6 +6,9 @@ properties([
 		[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]
 ])
 
+env.ENVIRONMENT = params.ENV
+env.ZK_HOST = ['Development': 'zoo1:2181,zoo2:2181,zoo3:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK'][env.ENVIRONMENT]
+
 	pipeline {
 		agent any
 		parameters {
@@ -54,6 +57,7 @@ properties([
 
 					sh 'echo "Deploying managed schema"'
 						echo params.ENV
+						echo env.ZK_HOST
 						echo "${params.CollectionValues}"
 						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
 						script {
