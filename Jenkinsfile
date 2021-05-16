@@ -21,8 +21,7 @@ properties([
 		stages {
 			stage('build') {
 				steps {
-				  input 'stop'
-					sh 'ls -lrt'
+					sh 'solr version'
 				}
 			}
 			stage('rebuild-pod') {
@@ -56,8 +55,7 @@ properties([
 					}
 				}
 				steps {
-				  input 'stop'
-					sh 'bin/solr version'
+					sh 'solr version'
 				}
 			}
 
