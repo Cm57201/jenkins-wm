@@ -71,7 +71,7 @@ properties([
 						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
 						script {
 							def collections_list = params.CollectionValues.split(",")
-								docker.inside(){
+								docker.image('solr:8.8.1').inside(){
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
 									}
