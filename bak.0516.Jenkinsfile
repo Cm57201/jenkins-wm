@@ -6,16 +6,18 @@ properties([
 		[$class: 'BuildDiscarderProperty', strategy: [$class: 'LogRotator', numToKeepStr: '10']]
 ])
 
+	env.ENVIRONMENT = params.ENV
+	env.ENVIRONMENT_TAG = ['development': 'Development', 'qa': 'QA', 'production': 'Production'][env.ENVIRONMENT]
 	pipeline {
 		agent any
 		parameters {
-			choice(name: 'ENV', choices: ['Development', 'QA', 'Production'], description: 'Enter the environment you want to deploy to')
+			choice(name: 'ENV', choices: ['development', 'qa', 'production'], description: 'Enter the environment you want to deploy to')
 				extendedChoice(defaultValue: '', description: '', descriptionPropertyValue: '', multiSelectDelimiter: ',', name: 'CollectionValues', quoteValue: false, saveJSONParameterToFile: false, type: 'PT_CHECKBOX', value: 'paycore, workercore, skillcore, clientcore, projectcore, workcore, paycore2, groupcore', visibleItemCount: 8)
 		}
 		stages {
 			stage('build') {
 				steps {
-					checkout scm
+					sh 'ls -lrt'
 				}
 			}
 			stage('rebuild-pod') {
@@ -42,9 +44,16 @@ properties([
 					}
 				}
 			}
+			stage('install-docker') {
+
+				steps {
+					sh 'ls -lrt'
+				}
+			}
+
+			stage('deploy-managedschema') {
 
 
-			stage('deploy-managed-schema') {
 				when {
 					expression {
 						params.CollectionValues.split(",").size() > 0
@@ -71,19 +80,20 @@ properties([
 
 		post {
 			always {
-				echo 'Solr Jenkinsfile execution complete'
+				echo 'This will always run'
 			}
 			success {
-				echo 'Solr Jenkinsfile execution completed successfully'
+				echo 'This will run only if successful'
 			}
 			failure {
-				echo 'Solr Jenkinsfile execution has failed'
+				echo 'This will run only if failed'
 			}
 			unstable {
-				echo 'This execution was marked as unstable'
+				echo 'This will run only if the run was marked as unstable'
 			}
 			changed {
-				echo 'The state of the Pipeline has changed from previous execution'
+				echo 'This will run only if the state of the Pipeline has changed'
+					echo 'For example, if the Pipeline was previously failing but is now successful'
 			}
 		}
 	}
