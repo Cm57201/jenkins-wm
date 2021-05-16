@@ -66,6 +66,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 								  input 'stop'
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
+										sh "solr zk rm /configs/${collection}/managed-schema -z ${env.ZK_HOST}"
                     sh "solr zk upconfig -n ${collection} -d configsets/${collection} -z ${env.ZK_HOST}"
 										solr_admin=sh(script: 'solr zk ls /live_nodes -z ${env.ZK_HOST}', returnStdout: true).find(/[^_]*/)
 										echo $solr_admin
