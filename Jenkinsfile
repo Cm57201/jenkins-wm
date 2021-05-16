@@ -58,26 +58,27 @@ properties([
 			stage('deploy-managedschema') {
 
 
-			  when {
-			        expression {
-			          params.CollectionValues.split(",").size() > 0
-			        }
-			      }
-			      steps {
+				when {
+					expression {
+						params.CollectionValues.split(",").size() > 0
+					}
+				}
+				steps {
 
-			        sh 'echo "Deploying managed schema"'
-			        echo params.ENV
-			        echo "${params.CollectionValues}"
-			        sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
-			        script {
-			          def collections_list = params.CollectionValues.split(",")
-			          docker.inside(){
-			          for (String collection: collections_list)
-			            echo "Got collection: " + collection
-			          }
-			        }
-			      }
-			    }
+					sh 'echo "Deploying managed schema"'
+						echo params.ENV
+						echo "${params.CollectionValues}"
+						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
+						script {
+							def collections_list = params.CollectionValues.split(",")
+								docker.inside(){
+									for (collection in collections_list) {
+										echo "Got collection: " + collection
+									}
+								}
+						}
+				}
+			}
 
 		}
 
