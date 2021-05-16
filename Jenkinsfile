@@ -62,7 +62,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
 						script {
 							def collections_list = params.CollectionValues.split(",")
-								docker.image('solr:8.8.1').inside(--net solr_881_solr){
+								docker.image('solr:8.8.1').inside('--net solr_881_solr'){
 								  input 'stop'
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
