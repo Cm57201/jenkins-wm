@@ -90,10 +90,11 @@ properties([
 									solr_collections_list = sh (script :"curl -s -k http://${solr_admin}/solr/admin/collections?action=LIST",returnStdout: true)
 									sh echo "${solr_collections_list}"
 									solr_collections_list = sh 'echo "${solr_collections_list}"| cut -d "[" -f 2| cut -d "]" -f 1'
+									echo "${solr_collections_list}"
 									for (collection in solr_collections_list.split(",")) {
 										url = "http://${solr_admin}/solr/admin/collections?action=RELOAD\\&name=${collection}"
-											echo "Solr core url to be reloaded: " + url
-											sh "curl -s -k -v ${url}"
+										echo "Solr core url to be reloaded: " + url
+										sh "curl -s -k -v ${url}"
 									}
 
 							}
