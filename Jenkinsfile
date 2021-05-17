@@ -40,7 +40,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 						if (!params.CollectionValues?.trim()) {
 							echo "Atleast one collection has to be selected"
 								currentBuild.result = "FAIL"
-								return
+								exit 1
 						}
 					}
 				}
@@ -50,7 +50,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 			stage('deploy-managed-schema') {
 				when {
 					expression {
-						params.CollectionValues.split(",").size() > 0
+						params.CollectionValues && params.CollectionValues.split(",").size() > 0
 					}
 				}
 				steps {
@@ -68,7 +68,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
 										try {
-										sh "solr zk rm /configs/${collection}/managed-schema -z ${env.ZK_HOST}"
+										  sh "solr zk rm /configs/${collection}/managed-schema -z ${env.ZK_HOST}"
 										} catch  (Exception e) {
 										  echo 'Exception: '+ e.toString()
 										}
