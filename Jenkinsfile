@@ -30,7 +30,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 				}
 				steps {
 					sh 'date'
-						sh 'echo "===========>KubeDeploy"'
+					sh 'echo "===========>KubeDeploy"'
 				}
 			}
 
