@@ -92,7 +92,7 @@ properties([
 								build_map = readJSON(text: solr_json)
 								solr_collections_list = build_map['collections']
 								echo "${solr_collections_list}"
-								for (collection in solr_collections_list.split(",")) {
+								for (collection in solr_collections_list) {
 									url = "http://${solr_admin}/solr/admin/collections?action=RELOAD\\&name=${collection}"
 									echo "Solr core url to be reloaded: " + url
 									sh "curl -s -k -v ${url}"
