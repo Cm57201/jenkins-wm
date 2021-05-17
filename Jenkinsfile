@@ -40,7 +40,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 						if (!params.CollectionValues?.trim()) {
 							echo "Atleast one collection has to be selected"
 								currentBuild.result = "FAIL"
-								exit 1
+								return -1
 						}
 					}
 				}
