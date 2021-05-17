@@ -75,6 +75,9 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 										sh "solr zk ls /live_nodes -z zoo1:2181"
 										solr_admin=sh (script: 'solr zk ls /live_nodes -z zoo1:2181', returnStdout: true).find(/[^_]*/)
 										echo "${solr_admin}"
+										url = "https://${solr_admin}/solr/admin/collections?action=RELOAD\\&name=${collection}"
+                    echo "Solr core url to be reloaded: " + url
+                    sh "curl -s -k ${url}"
 									}
 								}
 						}
