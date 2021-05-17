@@ -72,7 +72,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 										  echo 'Exception: '+ e.toString()
 										}
                     sh "solr zk upconfig -n ${collection} -d configsets/${collection} -z ${env.ZK_HOST}"
-										solr_admin=(solr zk ls /live_nodes -z zoo1:2181|cut -d '_' -f 1|tail -n 1)
+										solr_admin=solr zk ls /live_nodes -z zoo1:2181|cut -d '_' -f 1|tail -n 1
 										echo $solr_admin
 									}
 								}
