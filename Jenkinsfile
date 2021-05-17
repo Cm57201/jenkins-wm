@@ -64,6 +64,7 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 							def collections_list = params.CollectionValues.split(",")
 								docker.image('solr:8.8.1').inside('--net solr_881_solr'){
 								  input 'stop'
+									solr_admin=sh (script: 'solr zk ls /live_nodes -z zoo1:2181', returnStdout: true).find(/[^_]*/)
 									for (collection in collections_list) {
 										echo "Got collection: " + collection
 										try {
@@ -72,7 +73,6 @@ env.ZK_HOST = ['Development': 'zoo1:2181', 'QA': 'QA_ZK', 'Production': 'PROD_ZK
 										  echo 'Exception: '+ e.toString()
 										}
                     sh "solr zk upconfig -n ${collection} -d configsets/${collection} -z ${env.ZK_HOST}"
-										solr_admin=sh (script: 'solr zk ls /live_nodes -z zoo1:2181', returnStdout: true).find(/[^_]*/)
 										url = "http://${solr_admin}/solr/admin/collections?action=RELOAD\\&name=${collection}"
 										echo "Solr core url to be reloaded: " + url
 										sh "curl -s -k -v ${url}"
