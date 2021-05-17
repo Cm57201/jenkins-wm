@@ -87,8 +87,8 @@ properties([
 						script {
 							docker.image('solr:8.8.1').inside('--net solr_881_solr') {
 								solr_admin=sh (script: "solr zk ls /live_nodes -z ${env.ZK_HOST}", returnStdout: true).find(/[^_]*/)
-									solr_collections_list = sh (script :"curl -s -k http://${solr_admin}/solr/admin/collections?action=LIST",returnStdout: true)
-									sh echo "${solr_collections_list}"
+								solr_collections_list = sh (script :"curl -s -k http://${solr_admin}/solr/admin/collections?action=LIST",returnStdout: true)
+								sh echo "${solr_collections_list}"
 
 							}
 						}
