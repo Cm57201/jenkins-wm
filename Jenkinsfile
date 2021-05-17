@@ -42,24 +42,21 @@ properties([
 				}
 				steps {
 
-					sh 'echo "Deploying managed schema"'
-						echo params.ENV
-						echo env.ZK_HOST
+					sh 'echo "Deploying managed schema for ${params.CollectionValues} on ${ENVIRONMENT} with zookeeper host variable: ${ZK_HOST}"'
 						echo "${params.CollectionValues}"
-						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
 						script {
 							def collections_list = params.CollectionValues.split(",")
 								docker.image('solr:8.8.1').inside('--net solr_881_solr'){
 									input 'stop'
-										solr_admin=sh (script: "solr zk ls /live_nodes -z ${env.ZK_HOST}", returnStdout: true).find(/[^_]*/)
+										solr_admin=sh (script: "solr zk ls /live_nodes -z ${ZK_HOST}", returnStdout: true).find(/[^_]*/)
 										for (collection in collections_list) {
 											echo "Got collection: " + collection
 												try {
-													sh "solr zk rm /configs/${collection}/managed-schema -z ${env.ZK_HOST}"
+													sh "solr zk rm /configs/${collection}/managed-schema -z ${ZK_HOST}"
 												} catch  (Exception e) {
 													echo 'Exception: '+ e.toString()
 												}
-											sh "solr zk upconfig -n ${collection} -d configsets/${collection} -z ${env.ZK_HOST}"
+											sh "solr zk upconfig -n ${collection} -d configsets/${collection} -z ${ZK_HOST}"
 										}
 								}
 						}
@@ -68,12 +65,10 @@ properties([
 
 			stage('reload-collections') {
 				steps {
-					sh 'echo "Reloading collections"'
-						echo params.ENV
-						sh 'echo "Print the ZKHOST variable value here: ${ZK_HOST}"'
+					  sh 'echo "Reloading all collections on ${ENVIRONMENT} with zookeeper host variable: ${ZK_HOST}"'
 						script {
 							docker.image('solr:8.8.1').inside('--net solr_881_solr') {
-								solr_admin=sh (script: "solr zk ls /live_nodes -z ${env.ZK_HOST}", returnStdout: true).find(/[^_]*/)
+								solr_admin=sh (script: "solr zk ls /live_nodes -z ${ZK_HOST}", returnStdout: true).find(/[^_]*/)
 								solr_json = sh (label: 'Retrieve Collections List', script :"curl -s -k http://${solr_admin}/solr/admin/collections?action=LIST",returnStdout: true)
 								echo "${solr_json}"
 								build_map = readJSON(text: solr_json)
