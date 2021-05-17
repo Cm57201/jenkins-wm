@@ -34,19 +34,6 @@ properties([
 				}
 			}
 
-			stage('check-selected-collections') {
-				steps {
-					script {
-						if (!params.CollectionValues?.trim()) {
-							echo "Atleast one collection has to be selected"
-								currentBuild.result = "FAIL"
-								return -1
-						}
-					}
-				}
-			}
-
-
 			stage('deploy-managed-schema') {
 				when {
 					expression {
