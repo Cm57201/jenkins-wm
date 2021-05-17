@@ -88,8 +88,9 @@ properties([
 							docker.image('solr:8.8.1').inside('--net solr_881_solr'){
 								solr_admin=sh (script: "solr zk ls /live_nodes -z ${env.ZK_HOST}", returnStdout: true).find(/[^_]*/)
 									solr_collections_list = sh (script :"curl -s -k http://${solr_admin}/solr/admin/collections?action=LIST",returnStdout: true)
-									echo "${solr_collections_list}"
-									for (collection in solr_collections_list) {
+									sh echo "${solr_collections_list}"
+									solr_collections_list = echo "${solr_collections_list}"| cut -d "[" -f 2| cut -d "]" -f 1
+									for (collection in solr_collections_list.split(",")) {
 										url = "http://${solr_admin}/solr/admin/collections?action=RELOAD\\&name=${collection}"
 											echo "Solr core url to be reloaded: " + url
 											sh "curl -s -k -v ${url}"
